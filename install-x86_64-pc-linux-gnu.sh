@@ -5,15 +5,18 @@ ESPTOOL_VER=0.4.9
 DOWNLOAD_CACHE=./download
 mkdir $DOWNLOAD_CACHE
 
+BIN_FOLDER=./bin
+mkdir $BIN_FOLDER
+
 # Get MKSPIFFS Tool
 wget --no-clobber https://github.com/igrr/mkspiffs/releases/download/$MKSPIFFS_VER/mkspiffs-$MKSPIFFS_VER-linux64.tar.gz -P $DOWNLOAD_CACHE
-tar xvfz $DOWNLOAD_CACHE/mkspiffs-$MKSPIFFS_VER-linux64.tar.gz -C ./bin --strip=1
-chmod +x bin/mkspiffs
+tar xvfz $DOWNLOAD_CACHE/mkspiffs-$MKSPIFFS_VER-linux64.tar.gz -C $BIN_FOLDER --strip=1
+chmod +x $BIN_FOLDER/mkspiffs
 
 # Get ESPTOOL
 wget --no-clobber https://github.com/igrr/esptool-ck/releases/download/$ESPTOOL_VER/esptool-$ESPTOOL_VER-linux64.tar.gz -P $DOWNLOAD_CACHE
-tar xvfv $DOWNLOAD_CACHE/esptool-$ESPTOOL_VER-linux64.tar.gz -C ./bin --strip=1
-chmod +x bin/esptool
+tar xvfv $DOWNLOAD_CACHE/esptool-$ESPTOOL_VER-linux64.tar.gz -C $BIN_FOLDER --strip=1
+chmod +x $BIN_FOLDER/esptool
 
 # Get Xtensa GCC Compiler
 wget --no-clobber http://arduino.esp8266.com/linux64-xtensa-lx106-elf-gb404fb9.tar.gz -P $DOWNLOAD_CACHE
