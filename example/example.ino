@@ -36,15 +36,16 @@
 #include <ESP8266httpUpdate.h>
 #include "myLib.h"
 #include "myGlobalLib.h"
+#include <SoftwareSerial.h>
 
 void drawGraph();
 
 
-const char *ssid = "8068 Roaring Creek";
-const char *password = "4075076719";
-const char *ota_ip = "192.168.0.13";
+const char *ssid = "ssid";
+const char *password = "passowrd";
+const char *ota_ip = "192.168.0.1";
 const uint16_t ota_port = 1337;
-const char *ota_file = "/Adjutant.bin";
+const char *ota_file = "/example.bin";
 MDNSResponder mdns;
 
 
