@@ -1,6 +1,3 @@
-rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)
-  $(filter $(subst *,%,$2),$d))
-
 TARGET = $(notdir $(realpath .))
 ARCH = $(shell uname)
 ifeq ($(ARCH), Linux)
@@ -56,19 +53,18 @@ ifdef SPIFFS_SIZE
 endif
 
 LOCAL_USER_LIBDIR ?= ./libraries
-test = $(sort $(dir $(call rwildcard,$(LOCAL_USER_LIBDIR),*)))
-LOCAL_USER_LIB_SRC := $(wildcard $(addsuffix /*.c,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
-LOCAL_USER_LIB_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
-LOCAL_USER_LIB_HSRC := $(wildcard $(addsuffix /*.h,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
-LOCAL_USER_LIB_HPPSRC := $(wildcard $(addsuffix /*.hpp,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
-LOCAL_USER_LIB_INOSRC := $(wildcard $(addsuffix /*.ino,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
+LOCAL_USER_LIB_SRC := $(wildcard $(addsuffix /*.c,$(wildcard $(LOCAL_USER_LIBDIR)/*)))
+LOCAL_USER_LIB_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(wildcard $(LOCAL_USER_LIBDIR)/*)))
+LOCAL_USER_LIB_HSRC := $(wildcard $(addsuffix /*.h,$(wildcard $(LOCAL_USER_LIBDIR)/*)))
+LOCAL_USER_LIB_HPPSRC := $(wildcard $(addsuffix /*.hpp,$(wildcard $(LOCAL_USER_LIBDIR)/*)))
+LOCAL_USER_LIB_INOSRC := $(wildcard $(addsuffix /*.ino,$(wildcard $(LOCAL_USER_LIBDIR)/*)))
 LOCAL_USER_LIB_SRCS = $(LOCAL_USER_LIB_SRC) $(LOCAL_USER_LIB_CXXSRC) $(LOCAL_USER_LIB_HSRC) $(LOCAL_USER_LIB_HPPSRC) $(LOCAL_USER_LIB_INOSRC)
 GLOBAL_USER_LIBDIR ?= $(ROOT_DIR)/libraries
-GLOBAL_USER_LIB_SRC := $(wildcard $(addsuffix /*.c,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
-GLOBAL_USER_LIB_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
-GLOBAL_USER_LIB_HSRC := $(wildcard $(addsuffix /*.h,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
-GLOBAL_USER_LIB_HPPSRC := $(wildcard $(addsuffix /*.hpp,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
-GLOBAL_USER_LIB_INOSRC := $(wildcard $(addsuffix /*.ino,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
+GLOBAL_USER_LIB_SRC := $(wildcard $(addsuffix /*.c,$(wildcard $(GLOBAL_USER_LIBDIR)/*)))
+GLOBAL_USER_LIB_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(wildcard $(GLOBAL_USER_LIBDIR)/*)))
+GLOBAL_USER_LIB_HSRC := $(wildcard $(addsuffix /*.h,$(wildcard $(GLOBAL_USER_LIBDIR)/*)))
+GLOBAL_USER_LIB_HPPSRC := $(wildcard $(addsuffix /*.hpp,$(wildcard $(GLOBAL_USER_LIBDIR)/*)))
+GLOBAL_USER_LIB_INOSRC := $(wildcard $(addsuffix /*.ino,$(wildcard $(GLOBAL_USER_LIBDIR)/*)))
 GLOBAL_USER_LIB_SRCS = $(GLOBAL_USER_LIB_SRC) $(GLOBAL_USER_LIB_CXXSRC) $(GLOBAL_USER_LIB_HSRC) $(GLOBAL_USER_LIB_HPPSRC) $(GLOBAL_USER_LIB_INOSRC)
 ifndef TAG
 TAG := $(shell date --iso=seconds)
@@ -194,10 +190,10 @@ show_variables:
 	$(info [GLOBAL_USER_LIBDIR] : $(GLOBAL_USER_LIBDIR))
 	$(info [LOCAL_USER_LIB_SRCS] : $(LOCAL_USER_LIB_SRCS))
 	$(info [GLOBAL_USER_LIB_SRCS] : $(GLOBAL_USER_LIB_SRCS))
+	$(info [ULIBDIRS] : $(ULIBDIRS))
 	$(info [LIB_SRC] : $(LIB_SRC))
 	$(info [LIB_CXXSRC] : $(LIB_CXXSRC))
-	$(info [ULIBDIRS] : $(ULIBDIRS))
-	$(info [test] : $(test))
+	$(info [OBJ_FILES] : $(OBJ_FILES))
 
 dirs:
 	@mkdir -p $(CORE_DIRS)
@@ -227,7 +223,10 @@ $(BUILD_OUT)/%.c.o: %.c
 	$(CXX) -x c++ -D_TAG_=\"$(TAG)\" $(USER_DEFINE) $(DEFINES) $(CXXFLAGS) $(INCLUDES) $< -o $@
 #	$(CC) -D_TAG_=\"$(TAG)\" $(DEFINES) $(CFLAGS) $(INCLUDES) -o $@ $<
 
-$(BUILD_OUT)/%.cpp.o: %.cpp src/%.cpp
+$(BUILD_OUT)/%.cpp.o: %.cpp
+	$(CXX) -D_TAG_=\"$(TAG)\" $(USER_DEFINE) $(DEFINES) $(CXXFLAGS) $(INCLUDES) $< -o $@
+
+$(BUILD_OUT)/%.cpp.o: src/%.cpp
 	$(CXX) -D_TAG_=\"$(TAG)\" $(USER_DEFINE) $(DEFINES) $(CXXFLAGS) $(INCLUDES) $< -o $@
 
 $(BUILD_OUT)/%.fullino: $(USER_INOSRC)
