@@ -1,5 +1,7 @@
 # scintilla-arduino-ota
 
+An implementation of https://github.com/thunderace/Esp8266-Arduino-Makefile
+
 ### Usage
 
 ##### 1) Either clone or submodule/subtree this repository into your project.
