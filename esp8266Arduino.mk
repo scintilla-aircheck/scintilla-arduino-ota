@@ -103,10 +103,8 @@ endif
 
 ifndef USER_LIBS
     # automatically determine included user libraries
-    USER_LIBS = $(sort $(filter $(notdir $(wildcard $(LOCAL_USER_LIBDIR)/*)), \
-        $(shell $(SED) -ne 's/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p' $(LOCAL_SRCS))))
-    USER_LIBS += $(sort $(filter $(notdir $(wildcard $(GLOBAL_USER_LIBDIR)/*)), \
-        $(shell $(SED) -ne 's/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p' $(LOCAL_SRCS))))
+    USER_LIBS = $(sort $(notdir $(wildcard $(LOCAL_USER_LIBDIR)/*)))
+    USER_LIBS += $(sort $(notdir $(wildcard $(GLOBAL_USER_LIBDIR)/*)))
 endif
 
 # arduino libraries
@@ -220,6 +218,10 @@ $(BUILD_OUT)/core/%.cpp.o: %.cpp
 	$(CXX) $(CORE_DEFINE) $(DEFINES) $(CORE_INC:%=-I%) $(CXXFLAGS) $< -o $@
 
 $(BUILD_OUT)/%.c.o: %.c
+	$(CXX) -x c++ -D_TAG_=\"$(TAG)\" $(USER_DEFINE) $(DEFINES) $(CXXFLAGS) $(INCLUDES) $< -o $@
+#	$(CC) -D_TAG_=\"$(TAG)\" $(DEFINES) $(CFLAGS) $(INCLUDES) -o $@ $<
+
+$(BUILD_OUT)/%.c.o: src/%.c
 	$(CXX) -x c++ -D_TAG_=\"$(TAG)\" $(USER_DEFINE) $(DEFINES) $(CXXFLAGS) $(INCLUDES) $< -o $@
 #	$(CC) -D_TAG_=\"$(TAG)\" $(DEFINES) $(CFLAGS) $(INCLUDES) -o $@ $<
 
