@@ -1,3 +1,6 @@
+rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)
+  $(filter $(subst *,%,$2),$d))
+
 TARGET = $(notdir $(realpath .))
 ARCH = $(shell uname)
 ifeq ($(ARCH), Linux)
@@ -45,7 +48,6 @@ get_library_files  = $(if $(and $(wildcard $(1)/src), $(wildcard $(1)/library.pr
                         $(call rwildcard,$(1)/src/,*.$(2)), \
                         $(wildcard $(1)/*.$(2) $(1)/utility/*.$(2)))
 
-
 FLASH_LD ?= $(EAGLE_FILE_4M3M)
 ifdef SPIFFS_SIZE
 	ifeq ($(SPIFFS_SIZE),1)
@@ -54,6 +56,7 @@ ifdef SPIFFS_SIZE
 endif
 
 LOCAL_USER_LIBDIR ?= ./libraries
+test = $(sort $(dir $(call rwildcard,$(LOCAL_USER_LIBDIR),*)))
 LOCAL_USER_LIB_SRC := $(wildcard $(addsuffix /*.c,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
 LOCAL_USER_LIB_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
 LOCAL_USER_LIB_HSRC := $(wildcard $(addsuffix /*.h,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
@@ -71,7 +74,6 @@ ifndef TAG
 TAG := $(shell date --iso=seconds)
 endif
 
-
 ifdef NODENAME
 BUILD_OUT ?= ./build.$(ARDUINO_VARIANT).$(NODENAME)
 else
@@ -88,15 +90,13 @@ CORE_OBJS = $(addprefix $(BUILD_OUT)/core/, \
 	$(addprefix $(BUILD_OUT)/core/, $(patsubst $(ARDUINO_HOME)/cores/$(ARDUINO_ARCH)/%.c,%.c.o,$(CORE_SRC)))
 CORE_DIRS = $(sort $(dir $(CORE_OBJS)))
 
-
-USRCDIRS = .
+USRCDIRS = . ./src
 USER_SRC := $(wildcard $(addsuffix /*.c,$(USRCDIRS)))
 USER_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(USRCDIRS)))
 USER_HSRC := $(wildcard $(addsuffix /*.h,$(USRCDIRS)))
 USER_HPPSRC := $(wildcard $(addsuffix /*.hpp,$(USRCDIRS)))
 USER_INOSRC := $(wildcard $(addsuffix /*.ino,$(USRCDIRS)))
 LOCAL_SRCS = $(USER_SRC) $(USER_CXXSRC) $(USER_INOSRC) $(USER_HSRC) $(USER_HPPSRC)
-
 
 #autodetect arduino libs and user libs
 ifndef ARDUINO_LIBS
@@ -139,9 +139,9 @@ ULIBDIRS = $(sort $(dir $(wildcard \
 	$(USER_LIBS:%=$(GLOBAL_USER_LIBDIR)/%/src/*/*.cpp) \
 	$(USER_LIBS:%=$(GLOBAL_USER_LIBDIR)/%/src/*/*/*.cpp))))
 
-LIB_SRC = $(wildcard $(addsuffix /*.c,$(ULIBDIRS))) \
+LIB_SRC = $(wildcard $(addsuffix *.c,$(ULIBDIRS))) \
 	$(wildcard $(addsuffix *.c,$(ALIBDIRS)))
-LIB_CXXSRC = $(wildcard $(addsuffix /*.cpp,$(ULIBDIRS))) \
+LIB_CXXSRC = $(wildcard $(addsuffix *.cpp,$(ULIBDIRS))) \
 	$(wildcard $(addsuffix *.cpp,$(ALIBDIRS)))
 
 # object files
@@ -157,7 +157,7 @@ DEFINES = $(CPREPROCESSOR_FLAGS) -DLWIP_OPEN_SRC \
 CORE_INC = $(ARDUINO_HOME)/cores/$(ARDUINO_ARCH) \
 	$(ARDUINO_HOME)/variants/$(VARIANT)
 
-INCLUDES = -include Arduino.h $(CORE_INC:%=-I%) $(ALIBDIRS:%=-I%) $(ULIBDIRS:%=-I%)  $(USRCDIRS:%=-I%)
+INCLUDES = -include Arduino.h $(CORE_INC:%=-I%) $(ALIBDIRS:%=-I%) $(ULIBDIRS:%=-I%) $(USRCDIRS:%=-I%)
 VPATH = . $(CORE_INC) $(ALIBDIRS) $(ULIBDIRS)
 
 ASFLAGS = -c -g -x assembler-with-cpp -MMD -mlongcalls $(DEFINES)
@@ -167,7 +167,6 @@ CFLAGS = -c -Os -Wpointer-arith -Wno-implicit-function-declaration -Wl,-EL \
 	-falign-functions=4 -MMD -std=gnu99 -ffunction-sections -fdata-sections
 CXXFLAGS = -c -Os -mlongcalls -mtext-section-literals -fno-exceptions \
 	-fno-rtti -falign-functions=4 -std=c++11 -MMD -ffunction-sections -fdata-sections
-
 
 ELFLIBS = -lm -lgcc -lhal -lphy -lpp -lnet80211 -lwpa -lcrypto -lmain -lwps -laxtls -lsmartconfig -lmesh -lwpa2 -llwip_gcc -lstdc++
 
@@ -191,14 +190,14 @@ show_variables:
 	$(info [ARDUINO_LIBS] : $(ARDUINO_LIBS))
 	$(info [USER_LIBS] : $(USER_LIBS))
 	$(info [LOCAL_SRCS] : $(LOCAL_SRCS))
-	$(info [LOCAL_USER_LIB_HSRC] : $(LOCAL_USER_LIB_HSRC))
+	$(info [LOCAL_USER_LIBDIR] : $(LOCAL_USER_LIBDIR))
+	$(info [GLOBAL_USER_LIBDIR] : $(GLOBAL_USER_LIBDIR))
 	$(info [LOCAL_USER_LIB_SRCS] : $(LOCAL_USER_LIB_SRCS))
 	$(info [GLOBAL_USER_LIB_SRCS] : $(GLOBAL_USER_LIB_SRCS))
-	$(info [GLOBAL_USER_LIBDIR] : $(GLOBAL_USER_LIBDIR))
-	$(info [LOCAL_USER_LIBDIR] : $(LOCAL_USER_LIBDIR))
 	$(info [LIB_SRC] : $(LIB_SRC))
 	$(info [LIB_CXXSRC] : $(LIB_CXXSRC))
 	$(info [ULIBDIRS] : $(ULIBDIRS))
+	$(info [test] : $(test))
 
 dirs:
 	@mkdir -p $(CORE_DIRS)
@@ -228,7 +227,7 @@ $(BUILD_OUT)/%.c.o: %.c
 	$(CXX) -x c++ -D_TAG_=\"$(TAG)\" $(USER_DEFINE) $(DEFINES) $(CXXFLAGS) $(INCLUDES) $< -o $@
 #	$(CC) -D_TAG_=\"$(TAG)\" $(DEFINES) $(CFLAGS) $(INCLUDES) -o $@ $<
 
-$(BUILD_OUT)/%.cpp.o: %.cpp
+$(BUILD_OUT)/%.cpp.o: %.cpp src/%.cpp
 	$(CXX) -D_TAG_=\"$(TAG)\" $(USER_DEFINE) $(DEFINES) $(CXXFLAGS) $(INCLUDES) $< -o $@
 
 $(BUILD_OUT)/%.fullino: $(USER_INOSRC)
@@ -250,7 +249,6 @@ $(BUILD_OUT)/$(TARGET).bin: $(BUILD_OUT)/$(TARGET).elf
 	$(ESPTOOL) -eo $(ARDUINO_HOME)/bootloaders/eboot/eboot.elf -bo $(BUILD_OUT)/$(TARGET).bin \
 		-bm $(FLASH_MODE) -bf $(FLASH_FREQ) -bz $(FLASH_SIZE) \
 		-bs .text -bp 4096 -ec -eo $(BUILD_OUT)/$(TARGET).elf -bs .irom0.text -bs .text -bs .data -bs .rodata -bc -ec
-
 
 upload: $(BUILD_OUT)/$(TARGET).bin size
 	$(ESPTOOL) $(ESPTOOL_VERBOSE) -cd $(UPLOAD_RESETMETHOD) -cb $(UPLOAD_SPEED) -cp $(SERIAL_PORT) -ca 0x00000 -cf $(BUILD_OUT)/$(TARGET).bin
