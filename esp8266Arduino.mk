@@ -54,7 +54,19 @@ ifdef SPIFFS_SIZE
 endif
 
 LOCAL_USER_LIBDIR ?= ./libraries
+LOCAL_USER_LIB_SRC := $(wildcard $(addsuffix /*.c,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
+LOCAL_USER_LIB_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
+LOCAL_USER_LIB_HSRC := $(wildcard $(addsuffix /*.h,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
+LOCAL_USER_LIB_HPPSRC := $(wildcard $(addsuffix /*.hpp,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
+LOCAL_USER_LIB_INOSRC := $(wildcard $(addsuffix /*.ino,$(wildcard $(LOCAL_USER_LIBDIR)/**)))
+LOCAL_USER_LIB_SRCS = $(LOCAL_USER_LIB_SRC) $(LOCAL_USER_LIB_CXXSRC) $(LOCAL_USER_LIB_HSRC) $(LOCAL_USER_LIB_HPPSRC) $(LOCAL_USER_LIB_INOSRC)
 GLOBAL_USER_LIBDIR ?= $(ROOT_DIR)/libraries
+GLOBAL_USER_LIB_SRC := $(wildcard $(addsuffix /*.c,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
+GLOBAL_USER_LIB_CXXSRC := $(wildcard $(addsuffix /*.cpp,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
+GLOBAL_USER_LIB_HSRC := $(wildcard $(addsuffix /*.h,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
+GLOBAL_USER_LIB_HPPSRC := $(wildcard $(addsuffix /*.hpp,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
+GLOBAL_USER_LIB_INOSRC := $(wildcard $(addsuffix /*.ino,$(wildcard $(GLOBAL_USER_LIBDIR)/**)))
+GLOBAL_USER_LIB_SRCS = $(GLOBAL_USER_LIB_SRC) $(GLOBAL_USER_LIB_CXXSRC) $(GLOBAL_USER_LIB_HSRC) $(GLOBAL_USER_LIB_HPPSRC) $(GLOBAL_USER_LIB_INOSRC)
 ifndef TAG
 TAG := $(shell date --iso=seconds)
 endif
@@ -90,7 +102,7 @@ LOCAL_SRCS = $(USER_SRC) $(USER_CXXSRC) $(USER_INOSRC) $(USER_HSRC) $(USER_HPPSR
 ifndef ARDUINO_LIBS
     # automatically determine included libraries
     ARDUINO_LIBS = $(sort $(filter $(notdir $(wildcard $(ARDUINO_HOME)/libraries/*)), \
-        $(shell $(SED) -ne 's/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p' $(LOCAL_SRCS))))
+        $(shell $(SED) -ne 's/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p' $(LOCAL_SRCS) $(LOCAL_USER_LIB_SRCS) $(GLOBAL_USER_LIB_SRCS))))
 endif
 
 ifndef USER_LIBS
@@ -98,7 +110,7 @@ ifndef USER_LIBS
     USER_LIBS = $(sort $(filter $(notdir $(wildcard $(LOCAL_USER_LIBDIR)/*)), \
         $(shell $(SED) -ne 's/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p' $(LOCAL_SRCS))))
     USER_LIBS += $(sort $(filter $(notdir $(wildcard $(GLOBAL_USER_LIBDIR)/*)), \
-        $(shell $(SED)  -ne 's/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p' $(LOCAL_SRCS))))
+        $(shell $(SED) -ne 's/^ *\# *include *[<\"]\(.*\)\.h[>\"]/\1/p' $(LOCAL_SRCS))))
 endif
 
 # arduino libraries
@@ -128,9 +140,9 @@ ULIBDIRS = $(sort $(dir $(wildcard \
 	$(USER_LIBS:%=$(GLOBAL_USER_LIBDIR)/%/src/*/*/*.cpp))))
 
 LIB_SRC = $(wildcard $(addsuffix /*.c,$(ULIBDIRS))) \
-	$(wildcard $(addsuffix /*.c,$(ALIBDIRS)))
+	$(wildcard $(addsuffix *.c,$(ALIBDIRS)))
 LIB_CXXSRC = $(wildcard $(addsuffix /*.cpp,$(ULIBDIRS))) \
-	$(wildcard $(addsuffix /*.cpp,$(ALIBDIRS)))
+	$(wildcard $(addsuffix *.cpp,$(ALIBDIRS)))
 
 # object files
 OBJ_FILES = $(addprefix $(BUILD_OUT)/,$(notdir $(LIB_SRC:.c=.c.o) $(LIB_CXXSRC:.cpp=.cpp.o) $(TARGET).fullino.o $(USER_SRC:.c=.c.o) $(USER_CXXSRC:.cpp=.cpp.o)))
@@ -178,6 +190,15 @@ all: show_variables dirs core libs bin size
 show_variables:
 	$(info [ARDUINO_LIBS] : $(ARDUINO_LIBS))
 	$(info [USER_LIBS] : $(USER_LIBS))
+	$(info [LOCAL_SRCS] : $(LOCAL_SRCS))
+	$(info [LOCAL_USER_LIB_HSRC] : $(LOCAL_USER_LIB_HSRC))
+	$(info [LOCAL_USER_LIB_SRCS] : $(LOCAL_USER_LIB_SRCS))
+	$(info [GLOBAL_USER_LIB_SRCS] : $(GLOBAL_USER_LIB_SRCS))
+	$(info [GLOBAL_USER_LIBDIR] : $(GLOBAL_USER_LIBDIR))
+	$(info [LOCAL_USER_LIBDIR] : $(LOCAL_USER_LIBDIR))
+	$(info [LIB_SRC] : $(LIB_SRC))
+	$(info [LIB_CXXSRC] : $(LIB_CXXSRC))
+	$(info [ULIBDIRS] : $(ULIBDIRS))
 
 dirs:
 	@mkdir -p $(CORE_DIRS)
