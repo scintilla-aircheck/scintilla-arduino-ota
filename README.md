@@ -19,3 +19,7 @@ An implementation of https://github.com/thunderace/Esp8266-Arduino-Makefile
 4) run "make" to make
 
 5) run "make upload" to upload to your ESP8266
+
+### Optional Configuration
+
+Edit the .ld in the ld/ folder to change your logical block size for SPIFFS

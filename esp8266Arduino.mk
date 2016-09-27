@@ -45,10 +45,11 @@ get_library_files  = $(if $(and $(wildcard $(1)/src), $(wildcard $(1)/library.pr
                         $(call rwildcard,$(1)/src/,*.$(2)), \
                         $(wildcard $(1)/*.$(2) $(1)/utility/*.$(2)))
 
-FLASH_LD ?= $(EAGLE_FILE_4M3M)
+#FLASH_LD ?= $(ESPRESSIF_SDK)/ld/$(EAGLE_FILE_4M3M)
+FLASH_LD ?= $(ROOT_DIR)/ld/eagle.flash.4m_custom.ld
 ifdef SPIFFS_SIZE
 	ifeq ($(SPIFFS_SIZE),1)
-		FLASH_LD = $(EAGLE_FILE_4M1M)
+		FLASH_LD = $(ESPRESSIF_SDK)/ld/$(EAGLE_FILE_4M1M)
 	endif
 endif
 
@@ -166,7 +167,7 @@ ELFLIBS = -lm -lgcc -lhal -lphy -lpp -lnet80211 -lwpa -lcrypto -lmain -lwps -lax
 
 ELFFLAGS = -g -w -Os -nostdlib -Wl,--no-check-sections -u call_user_start -Wl,-static \
 	-L$(ESPRESSIF_SDK)/lib -L$(ESPRESSIF_SDK)/ld \
-	 -T$(ESPRESSIF_SDK)/ld/$(FLASH_LD) \
+	 -T$(FLASH_LD) \
 	 -Wl,--gc-sections -Wl,-wrap,system_restart_local -Wl,-wrap,register_chipv6_phy
 
 CC := $(XTENSA_TOOLCHAIN)xtensa-lx106-elf-gcc
@@ -192,6 +193,7 @@ show_variables:
 	$(info [LIB_SRC] : $(LIB_SRC))
 	$(info [LIB_CXXSRC] : $(LIB_CXXSRC))
 	$(info [OBJ_FILES] : $(OBJ_FILES))
+	$(info [FLASH_LD] : $(FLASH_LD))
 
 dirs:
 	@mkdir -p $(CORE_DIRS)
